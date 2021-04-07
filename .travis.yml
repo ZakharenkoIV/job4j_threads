@@ -1,0 +1,12 @@
+language: java
+jdk:
+  - openjdk14
+
+sudo: false
+
+notifications:
+  email:
+    recipients:
+      -zaharenkoiv93@gmail.com
+    on_success: never
+    on_failure: always
