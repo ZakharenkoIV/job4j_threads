@@ -9,10 +9,8 @@ public class Wget {
                         for (int i = 0; i <= 100; i++) {
                             Thread.sleep(100);
                             System.out.print("\rLoading : " + i);
-                            if (i == 100) {
-                                System.out.print("\rDownload complete\n");
-                            }
                         }
+                            System.out.print("\rDownload complete\n");
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
