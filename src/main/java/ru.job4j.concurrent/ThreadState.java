@@ -8,20 +8,21 @@ public class ThreadState {
         Thread second = new Thread(
                 () -> System.out.println(Thread.currentThread().getName() + " -- do work")
         );
-        System.out.println(first.getName() + " -- " + first.getState());
-        System.out.println(second.getName() + " -- " + first.getState());
+        printInfo(first);
+        printInfo(second);
         first.start();
         second.start();
         while (first.getState() != Thread.State.TERMINATED
-                && second.getState() != Thread.State.TERMINATED) {
-            System.out.println(first.getName() + " -- " + first.getState());
-            System.out.println(second.getName() + " -- " + second.getState());
+                || second.getState() != Thread.State.TERMINATED) {
+            printInfo(first);
+            printInfo(second);
         }
-        System.out.println(first.getName() + " -- " + first.getState());
-        System.out.println(second.getName() + " -- " + second.getState());
-        if (first.getState() == Thread.State.TERMINATED
-                && second.getState() == Thread.State.TERMINATED) {
-            System.out.println("work completed" + Thread.activeCount());
-        }
+        printInfo(first);
+        printInfo(second);
+        System.out.println("work completed");
+    }
+
+    private static void printInfo(Thread thread) {
+        System.out.println(thread.getName() + " -- " + thread.getState());
     }
 }
