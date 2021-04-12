@@ -21,7 +21,7 @@ public class ParseFile {
         return content(data -> data < 0x80);
     }
 
-    private String content(Predicate<int> filter) {
+    private String content(Predicate<Integer> filter) {
         StringBuilder output = new StringBuilder();
         try (BufferedInputStream buffer = new BufferedInputStream(new FileInputStream(file))) {
             int data;
