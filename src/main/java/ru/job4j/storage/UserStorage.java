@@ -25,9 +25,11 @@ public class UserStorage {
 
     public synchronized boolean transfer(int fromId, int toId, int amount) {
         boolean result = false;
-        if (map.get(fromId).getAmount() >= amount) {
-            map.get(fromId).setAmount(map.get(fromId).getAmount() - amount);
-            map.get(toId).setAmount(map.get(toId).getAmount() + amount);
+        User sender = map.get(fromId);
+        User recipient = map.get(toId);
+        if (sender != null && recipient != null && sender.getAmount() >= amount) {
+            sender.setAmount(sender.getAmount() - amount);
+            recipient.setAmount(recipient.getAmount() + amount);
             result = true;
         }
         return result;
