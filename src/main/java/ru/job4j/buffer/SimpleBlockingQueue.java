@@ -21,16 +21,15 @@ public class SimpleBlockingQueue<T> {
 
     public synchronized void offer(T value) throws InterruptedException {
         while (queue.size() == capacity) {
-                this.wait();
+            this.wait();
         }
-        if (queue.offer(value)) {
-            this.notifyAll();
-        }
+        queue.offer(value);
+        this.notifyAll();
     }
 
     public synchronized T poll() throws InterruptedException {
         while (queue.size() == 0) {
-                this.wait();
+            this.wait();
         }
         T result = queue.poll();
         this.notifyAll();
