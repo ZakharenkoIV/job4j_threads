@@ -1,43 +1,52 @@
 package ru.job4j;
 
-import java.util.Arrays;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 
 public class ParallelLookup<T> extends RecursiveTask<Integer> {
     private final T[] array;
     private final T object;
+    private final int start;
+    private final int and;
 
     public ParallelLookup(T[] array, T object) {
         this.array = array;
         this.object = object;
+        this.start = 0;
+        this.and = array.length - 1;
+    }
+
+    public ParallelLookup(T[] array, T object, int start, int and) {
+        this.array = array;
+        this.object = object;
+        this.start = start;
+        this.and = and;
     }
 
     @Override
     protected Integer compute() {
-        if (array.length <= 10) {
-            return linearSearch(object);
+        if (and - start <= 10) {
+            return linearSearch(object, start, and);
         }
-        ParallelLookup<T> leftPart = new ParallelLookup<>(Arrays.copyOfRange(
-                array, 0, array.length / 2), object);
-
-        ParallelLookup<T> rightPart = new ParallelLookup<>(Arrays.copyOfRange(
-                array, array.length / 2 + 1, array.length - 1), object);
+        int mid = (start + and) / 2;
+        ParallelLookup<T> leftPart = new ParallelLookup<>(array, object, start, mid);
+        ParallelLookup<T> rightPart = new ParallelLookup<>(array, object, mid + 1, and);
         leftPart.fork();
         rightPart.fork();
         return Math.max(rightPart.join(), leftPart.join());
     }
 
-    public int indexOf(T[] array, T object) {
+    public int indexOf() {
         ForkJoinPool forkJoinPool = new ForkJoinPool();
         return forkJoinPool.invoke(new ParallelLookup<>(array, object));
     }
 
-    private int linearSearch(T t) {
+    private int linearSearch(T object, int start, int and) {
         int result = -1;
-        for (int i = 0; i <= 10; i++) {
-            if (array[i].equals(t)) {
+        for (int i = start; i <= and; i++) {
+            if (array[i].equals(object)) {
                 result = i;
+                break;
             }
         }
         return result;
