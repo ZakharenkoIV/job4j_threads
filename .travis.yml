@@ -4,9 +4,16 @@ jdk:
 
 sudo: false
 
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
 notifications:
   email:
     recipients:
-      -zaharenkoiv93@gmail.com
+      -youremail@smtp.ru
     on_success: never
     on_failure: always
+
+env:
+  global:
+    - CODECOV_TOKEN="22edc34a-75c2-4438-9f4a-a48c1cd392d0"
