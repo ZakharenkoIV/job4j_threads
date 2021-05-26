@@ -23,17 +23,22 @@ public class JsonAggregator {
         ExecutorService executor = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors());
         CompletionService<JSONObject> completionService = new ExecutorCompletionService<>(executor);
-        loadingTasks(jsonArray, completionService);
-        JSONArray resultArray = getResultTasks(jsonArray.length(), completionService);
+        CopyOnWriteArrayList<Future<JSONObject>> futureList = loadingTasks(
+                jsonArray, completionService);
+        JSONArray resultArray = getResultTasks(futureList);
         executor.shutdown();
         return resultArray.toString();
     }
 
-    private JSONArray getResultTasks(int arrayLength, CompletionService<JSONObject> service) {
+    private JSONArray getResultTasks(CopyOnWriteArrayList<Future<JSONObject>> futureList) {
         JSONArray resultArray = new JSONArray();
-        for (int i = 0; i < arrayLength; i++) {
+        for (int i = 0; i < futureList.size(); i++) {
             try {
-                resultArray.put(service.take().get());
+                if (futureList.get(i).isDone()) {
+                    resultArray.put(futureList.get(i).get());
+                } else {
+                    i--;
+                }
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
@@ -41,9 +46,11 @@ public class JsonAggregator {
         return resultArray;
     }
 
-    private void loadingTasks(JSONArray jsonArray, CompletionService<JSONObject> service) {
+    private CopyOnWriteArrayList<Future<JSONObject>> loadingTasks(
+            JSONArray jsonArray, CompletionService<JSONObject> service) {
+        CopyOnWriteArrayList<Future<JSONObject>> list = new CopyOnWriteArrayList<>();
         for (Object o : jsonArray) {
-            service.submit(() -> {
+            Future<JSONObject> submit = service.submit(() -> {
                 JSONObject camera = new JSONObject(o.toString());
                 JSONObject sourceDataUrl = new JSONObject(
                         download(camera.get("sourceDataUrl").toString()));
@@ -56,7 +63,9 @@ public class JsonAggregator {
                         .put("value", tokenDataUrl.get("value"))
                         .put("ttl", tokenDataUrl.get("ttl"));
             });
+            list.add(submit);
         }
+        return list;
     }
 
     private String download(String url) {
