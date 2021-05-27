@@ -32,13 +32,9 @@ public class JsonAggregator {
 
     private JSONArray getResultTasks(CopyOnWriteArrayList<Future<JSONObject>> futureList) {
         JSONArray resultArray = new JSONArray();
-        for (int i = 0; i < futureList.size(); i++) {
+        for (Future<JSONObject> jsonObjectFuture : futureList) {
             try {
-                if (futureList.get(i).isDone()) {
-                    resultArray.put(futureList.get(i).get());
-                } else {
-                    i--;
-                }
+                resultArray.put(jsonObjectFuture.get());
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
