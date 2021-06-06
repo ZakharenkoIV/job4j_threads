@@ -13,45 +13,45 @@ import java.util.concurrent.*;
 public class JsonAggregator {
 
     public static void main(String[] args) {
-        String s = new JsonAggregator().getJsonVideoCameras(
+        String camerasJson = new JsonAggregator().getJsonVideoCameras(
                 "http://www.mocky.io/v2/5c51b9dd3400003252129fb5");
-        System.out.println(s);
+        System.out.println(camerasJson);
     }
 
     public String getJsonVideoCameras(String url) {
-        JSONArray jsonArray = new JSONArray(download(url));
-        ExecutorService executor = Executors.newFixedThreadPool(
+        JSONArray camerasJson = new JSONArray(getResponse(url));
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors());
-        CompletionService<JSONObject> completionService = new ExecutorCompletionService<>(executor);
-        CopyOnWriteArrayList<Future<JSONObject>> futureList = loadingTasks(
-                jsonArray, completionService);
-        JSONArray resultArray = getResultTasks(futureList);
-        executor.shutdown();
-        return resultArray.toString();
+        CompletionService<JSONObject> service = new ExecutorCompletionService<>(fixedThreadPool);
+        CopyOnWriteArrayList<Future<JSONObject>> tasksList = getTasksList(
+                camerasJson, service);
+        JSONArray tasksResults = getTasksResults(tasksList);
+        fixedThreadPool.shutdown();
+        return tasksResults.toString();
     }
 
-    private JSONArray getResultTasks(CopyOnWriteArrayList<Future<JSONObject>> futureList) {
-        JSONArray resultArray = new JSONArray();
+    private JSONArray getTasksResults(CopyOnWriteArrayList<Future<JSONObject>> futureList) {
+        JSONArray tasksResults = new JSONArray();
         for (Future<JSONObject> jsonObjectFuture : futureList) {
             try {
-                resultArray.put(jsonObjectFuture.get());
+                tasksResults.put(jsonObjectFuture.get());
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
         }
-        return resultArray;
+        return tasksResults;
     }
 
-    private CopyOnWriteArrayList<Future<JSONObject>> loadingTasks(
-            JSONArray jsonArray, CompletionService<JSONObject> service) {
-        CopyOnWriteArrayList<Future<JSONObject>> list = new CopyOnWriteArrayList<>();
-        for (Object o : jsonArray) {
+    private CopyOnWriteArrayList<Future<JSONObject>> getTasksList(
+            JSONArray camerasJson, CompletionService<JSONObject> service) {
+        CopyOnWriteArrayList<Future<JSONObject>> tasksList = new CopyOnWriteArrayList<>();
+        for (Object o : camerasJson) {
             Future<JSONObject> submit = service.submit(() -> {
                 JSONObject camera = new JSONObject(o.toString());
                 JSONObject sourceDataUrl = new JSONObject(
-                        download(camera.get("sourceDataUrl").toString()));
+                        getResponse(camera.get("sourceDataUrl").toString()));
                 JSONObject tokenDataUrl = new JSONObject(
-                        download(camera.get("tokenDataUrl").toString()));
+                        getResponse(camera.get("tokenDataUrl").toString()));
                 return new JSONObject()
                         .put("id", camera.get("id"))
                         .put("urlType", sourceDataUrl.get("urlType"))
@@ -59,13 +59,13 @@ public class JsonAggregator {
                         .put("value", tokenDataUrl.get("value"))
                         .put("ttl", tokenDataUrl.get("ttl"));
             });
-            list.add(submit);
+            tasksList.add(submit);
         }
-        return list;
+        return tasksList;
     }
 
-    private String download(String url) {
-        String result = "";
+    private String getResponse(String url) {
+        String response = "";
         try (BufferedInputStream in = new BufferedInputStream(new URL(url).openStream());
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[1024];
@@ -73,10 +73,10 @@ public class JsonAggregator {
             while ((length = in.read(buffer)) != -1) {
                 out.write(buffer, 0, length);
             }
-            result = out.toString(StandardCharsets.UTF_8);
+            response = out.toString(StandardCharsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return result;
+        return response;
     }
 }
